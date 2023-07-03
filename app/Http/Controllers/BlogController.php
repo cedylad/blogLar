@@ -17,13 +17,12 @@ class BlogController extends Controller
         ]);
     }
 
-    public function show(string $slug, string $id): RedirectResponse | View
+    public function show(string $slug, Post $post): RedirectResponse | View
     {
-        $post = Post::findOrFail($id);
         if ($post->slug !== $slug) {
             return to_route('blog.show', ['slug' => $post->slug, 'id' => $post->id]);
         }
-        return view('blog.show', [
+        return view('blog.show',  [
             'post' => $post
         ]);
     }
