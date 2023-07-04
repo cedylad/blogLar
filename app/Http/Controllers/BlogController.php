@@ -3,18 +3,45 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use PhpParser\Node\Expr\Cast\String_;
+use App\Http\Requests\CreatePostRequest;
+use GuzzleHttp\Promise\Create;
 use Illuminate\Contracts\Pagination\Paginator;
-use Illuminate\View\View;
 
 class BlogController extends Controller
 {
     public function index(): View
     {
         return view('blog.index', [
-            'posts' => Post::paginate(1)
+            'posts' => Post::paginate(3)
         ]);
+    }
+
+    public function create(): View
+    {
+        return view('blog.create');
+    }
+
+    public function store(CreatePostRequest $request)
+    {
+        $post = Post::create($request->validated());
+        return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été sauvegardé");
+    }
+
+    public function edit(Post $post): View
+    {
+        return view('blog.edit', [
+            'post' => $post
+        ]);
+    }
+
+    public function update(Post $post, CreatePostRequest $request)
+    {
+        $post->update($request->validated());
+        return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été modifié");
     }
 
     public function show(string $slug, Post $post): RedirectResponse | View
