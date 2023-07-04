@@ -7,7 +7,7 @@ use Illuminate\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use PhpParser\Node\Expr\Cast\String_;
-use App\Http\Requests\CreatePostRequest;
+use App\Http\Requests\FormPostRequest;
 use GuzzleHttp\Promise\Create;
 use Illuminate\Contracts\Pagination\Paginator;
 
@@ -22,10 +22,13 @@ class BlogController extends Controller
 
     public function create(): View
     {
-        return view('blog.create');
+        $post = new Post();
+        return view('blog.create', [
+            'post' => $post
+        ]);
     }
 
-    public function store(CreatePostRequest $request)
+    public function store(FormPostRequest $request)
     {
         $post = Post::create($request->validated());
         return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été sauvegardé");
@@ -38,7 +41,7 @@ class BlogController extends Controller
         ]);
     }
 
-    public function update(Post $post, CreatePostRequest $request)
+    public function update(Post $post, FormPostRequest $request)
     {
         $post->update($request->validated());
         return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été modifié");
