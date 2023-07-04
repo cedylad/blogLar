@@ -3,12 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Category;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
+use GuzzleHttp\Promise\Create;
 use Illuminate\Http\RedirectResponse;
 use PhpParser\Node\Expr\Cast\String_;
 use App\Http\Requests\FormPostRequest;
-use GuzzleHttp\Promise\Create;
+use App\Models\Tag;
 use Illuminate\Contracts\Pagination\Paginator;
 
 class BlogController extends Controller
@@ -16,7 +18,7 @@ class BlogController extends Controller
     public function index(): View
     {
         return view('blog.index', [
-            'posts' => Post::paginate(3)
+            'posts' => Post::with('tags', 'category')->paginate(10)
         ]);
     }
 
@@ -24,26 +26,33 @@ class BlogController extends Controller
     {
         $post = new Post();
         return view('blog.create', [
-            'post' => $post
+            'post' => $post,
+            'categories' => Category::select('id', 'name')->get(),
+            'tags' => Tag::select('id', 'name')->get()
         ]);
     }
 
     public function store(FormPostRequest $request)
     {
         $post = Post::create($request->validated());
+        $post->tags()->sync($request->validated('tags'));
         return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été sauvegardé");
     }
 
     public function edit(Post $post): View
     {
+
         return view('blog.edit', [
-            'post' => $post
+            'post' => $post,
+            'categories' => Category::select('id', 'name')->get(),
+            'tags' => Tag::select('id', 'name')->get()
         ]);
     }
 
     public function update(Post $post, FormPostRequest $request)
     {
         $post->update($request->validated());
+        $post->tags()->sync($request->validated('tags'));
         return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été modifié");
     }
 
