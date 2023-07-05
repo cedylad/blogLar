@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\BlogController;
 use Illuminate\Http\Request as HttpRequest;
@@ -21,6 +22,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+//Partie authentification
+Route::get('/login', [AuthController::class, 'login'])->name('auth.login');
+Route::post('/login', [AuthController::class, 'doLogin'])->name('auth.login');
+
+//Partie blog
 Route::prefix('/blog')->name('blog.')->controller(BlogController::class)->group(function () {
     Route::get('/', 'index')->name('index');
 
