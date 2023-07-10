@@ -2,16 +2,18 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Tag;
 use App\Models\Post;
 use App\Models\Category;
 use Illuminate\View\View;
 use Illuminate\Http\Request;
 use GuzzleHttp\Promise\Create;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Http\RedirectResponse;
 use PhpParser\Node\Expr\Cast\String_;
 use App\Http\Requests\FormPostRequest;
-use App\Models\Tag;
 use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Support\Facades\Storage;
 
 class BlogController extends Controller
 {
@@ -34,7 +36,7 @@ class BlogController extends Controller
 
     public function store(FormPostRequest $request)
     {
-        $post = Post::create($request->validated());
+        $post = Post::create($this->extractData(new Post(), $request));
         $post->tags()->sync($request->validated('tags'));
         return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été sauvegardé");
     }
@@ -51,9 +53,29 @@ class BlogController extends Controller
 
     public function update(Post $post, FormPostRequest $request)
     {
-        $post->update($request->validated());
+
+
+        $post->update($this->extractData($post, $request));
         $post->tags()->sync($request->validated('tags'));
         return redirect()->route('blog.show', ['slug' => $post->slug, 'post' => $post->id])->with('success', "L'article a bien été modifié");
+    }
+
+    private function extractData(Post $post, FormPostRequest $request): array
+    {
+        $data = $request->validated();
+
+        /** @var UploadedFile|null $image */
+
+        $image = $request->validated('image');
+
+        if ($image == null || $image->getError()) {
+            return $data;
+        }
+        if ($post->image) {
+            Storage::disk('public')->delete($post->image);
+        }
+        $data['image'] = $image->store('blog', 'public');
+        return $data;
     }
 
     public function show(string $slug, Post $post): RedirectResponse | View

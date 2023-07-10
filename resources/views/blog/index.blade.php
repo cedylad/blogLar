@@ -27,6 +27,10 @@
 
     </p>
 
+    @if($post->image)
+    <img style="width: 100%; height: 150px; object-fit:cover" src="{{ $post->imageUrl() }}" alt="">
+    @endif
+
     <p>
         {{ $post->content }}
     </p>
